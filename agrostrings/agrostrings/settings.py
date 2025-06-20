@@ -48,7 +48,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    #project apps
+    'users'
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -78,6 +90,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'agrostrings.wsgi.application'
+
+AUTH_USER_MODEL = 'users.User'
+
 
 
 # Database
