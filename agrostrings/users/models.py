@@ -16,7 +16,7 @@ class User(AbstractUser):
     district = models.CharField(max_length=100, blank=True)
     email = models.EmailField(blank=True, null=True)  # ✅ Make email optional
     operator_id = models.CharField(
-        max_length=30, unique=True, null=True, blank=True
+        max_length=30, unique=False, null=True, blank=True
     )  # For field operators
     registered_by = models.ForeignKey(
         "self",

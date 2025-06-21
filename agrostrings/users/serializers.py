@@ -4,6 +4,9 @@ from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):
+    operator_id = serializers.CharField(read_only=True)
+    registered_by = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -16,6 +19,11 @@ class UserSerializer(serializers.ModelSerializer):
             "registered_by",
         ]
         read_only_fields = ["operator_id", "registered_by"]
+
+    def get_registered_by(self, obj):
+        if obj.registered_by:
+            return obj.registered_by.username
+        return None
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -63,6 +71,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                     "Only field operators can register farmers."
                 )
             validated_data["registered_by"] = current_user
+            validated_data["operator_id"] = current_user.operator_id
         # Prevent anyone else from registering
         else:
             raise serializers.ValidationError("Invalid role for registration.")
@@ -99,14 +108,14 @@ class LoginSerializer(serializers.Serializer):
                     "Farmer with those credentials not found."
                 )
 
-        elif role == "buyer" or role == "admin":
+        elif role in ["buyer", "admin", "field_operator"]:
             username = data.get("username")
             password = data.get("password")
             phone = data.get("phone_number")
 
             if not username or not password or not phone:
                 raise serializers.ValidationError(
-                    "Username, phone number, and password are required for buyers and admins."
+                    "Username, phone number, and password are required for buyers, admins, and field operators."
                 )
 
             user = authenticate(username=username, password=password)
