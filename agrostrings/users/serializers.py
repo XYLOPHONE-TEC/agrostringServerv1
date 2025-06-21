@@ -99,19 +99,19 @@ class LoginSerializer(serializers.Serializer):
                     "Farmer with those credentials not found."
                 )
 
-        elif role == "buyer":
+        elif role == "buyer" or role == "admin":
             username = data.get("username")
             password = data.get("password")
             phone = data.get("phone_number")
 
             if not username or not password or not phone:
                 raise serializers.ValidationError(
-                    "Username, phone number, and password are required for buyers."
+                    "Username, phone number, and password are required for buyers and admins."
                 )
 
             user = authenticate(username=username, password=password)
-            if not user or user.role != "buyer" or user.phone_number != phone:
-                raise serializers.ValidationError("Invalid buyer credentials.")
+            if not user or user.role != role or user.phone_number != phone:
+                raise serializers.ValidationError(f"Invalid {role} credentials.")
 
         else:
             raise serializers.ValidationError("Invalid role or missing role field.")

@@ -9,6 +9,7 @@ class User(AbstractUser):
         ("farmer", "Farmer"),
         ("buyer", "Buyer"),
         ("admin", "Admin"),
+        ("field_operator", "Field Operator"),
     )
     role = models.CharField(max_length=15, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=15, unique=True)
