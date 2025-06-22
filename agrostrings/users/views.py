@@ -149,8 +149,8 @@ class AdminListView(generics.ListAPIView):
 #     lookup_field = 'id'
 
 
-# class UserDeleteView(generics.DestroyAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
-#     lookup_field = 'id'
+class UserDeleteView(generics.DestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+    lookup_field = 'id'

@@ -10,8 +10,8 @@ from .views import (
     AdminListView,
     UserListView,
     UserDetailView,
-
-    # UserUpdateView, UserDeleteView,
+    UserDeleteView,
+    #UserUpdateView,
 )
 
 urlpatterns = [
@@ -25,12 +25,12 @@ urlpatterns = [
     path("dashboard/admin/", AdminDashboardView.as_view()),
     path("field-operator/farmers/", FieldOperatorFarmersView.as_view()),
 
-    path('users/list/', UserListView.as_view(), name='user-list'),
-    path('users/detail/<int:id>/', UserDetailView.as_view(), name='user-detail'),
-    path('users/admins/', AdminListView.as_view(), name='admin-list'),
+    path('list/', UserListView.as_view(), name='user-list'),
+    path('detail/<int:id>/', UserDetailView.as_view(), name='user-detail'),
+    path('admins/', AdminListView.as_view(), name='admin-list'),
 
     # path('users/update/<int:id>/', UserUpdateView.as_view(), name='user-update'),
-    # path('users/delete/<int:id>/', UserDeleteView.as_view(), name='user-delete'),
+    path('delete/<int:id>/', UserDeleteView.as_view(), name='user-delete'),
 
 
 ]
