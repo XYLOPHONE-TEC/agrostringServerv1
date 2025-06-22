@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -33,13 +33,18 @@ class RegisterView(generics.CreateAPIView):
 
 class FieldOperatorFarmersView(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated, IsFieldOperator]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsFieldOperator | IsAdmin | IsSuperAdmin,
+    ]
 
     def get_queryset(self):
-        # Only field operators can view their registered farmers
         user = self.request.user
         if user.role == "field_operator":
             return User.objects.filter(registered_by=user, role="farmer")
+        elif user.role == "admin" or getattr(user, "is_super_admin", False):
+            # Admins and super admin can see all farmers registered by any field operator
+            return User.objects.filter(role="farmer")
         return User.objects.none()
 
 
@@ -69,6 +74,7 @@ class LoginView(APIView):
         )
 
 
+# should take research about this
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -104,3 +110,47 @@ class AdminDashboardView(APIView):
         return Response(
             {"message": "Welcome to the Admin dashboard", "user": request.user.username}
         )
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin | IsAdmin]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["role", "username", "district", "phone_number"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        role = self.request.query_params.get("role")
+        if role:
+            queryset = queryset.filter(role=role)
+        return queryset
+
+
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin | IsAdmin]
+    lookup_field = "id"
+
+
+class AdminListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+
+    def get_queryset(self):
+        return User.objects.filter(role="admin", is_super_admin=False)
+
+
+# class UserUpdateView(generics.UpdateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin | IsAdmin]
+#     lookup_field = 'id'
+
+
+# class UserDeleteView(generics.DestroyAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+#     lookup_field = 'id'
