@@ -126,3 +126,30 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid role or missing role field.")
 
         return user
+    
+
+
+
+
+class UserUpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "phone_number",
+            "district",
+            "email"
+        ]
+        extra_kwargs = {
+            "username": {"required": False},
+            "phone_number": {"required": False},
+            "district": {"required": False},
+            "email": {"required": False},
+        }
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
