@@ -2,9 +2,9 @@ from django.shortcuts import render
 
 # Create your views here.
 
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
 from .models import User
-from .serializers import RegisterSerializer, UserSerializer, UserUpdateProfileSerializer
+from .serializers import RegisterSerializer, UserSerializer, UserUpdateProfileSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, LogoutSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -155,3 +155,38 @@ class UserDeleteView(generics.DestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
     lookup_field = 'id'
+
+
+
+
+class PasswordResetRequestView(APIView):
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response({
+                "message": "Reset code sent successfully.",
+                "reset_code": serializer.validated_data['code']  # REMOVE in production
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -11,7 +11,10 @@ from .views import (
     UserListView,
     UserDetailView,
     UserDeleteView,
-    UpdateMyProfileView
+    UpdateMyProfileView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
+    LogoutView
 )
 
 urlpatterns = [
@@ -24,7 +27,7 @@ urlpatterns = [
     path("dashboard/buyer/", BuyerDashboardView.as_view()),
     path("dashboard/admin/", AdminDashboardView.as_view()),
     path("field-operator/farmers/", FieldOperatorFarmersView.as_view()),
-    
+
     #viewing a list of all users including the super admin
     path('list/', UserListView.as_view(), name='user-list'),
     path('detail/<int:id>/', UserDetailView.as_view(), name='user-detail'),
@@ -32,7 +35,11 @@ urlpatterns = [
     path('admins/', AdminListView.as_view(), name='admin-list'),
 
     path('delete/<int:id>/', UserDeleteView.as_view(), name='user-delete'),
-    path('update/me/', UpdateMyProfileView.as_view(), name='user-update-self')
+    path('update/me/', UpdateMyProfileView.as_view(), name='user-update-self'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+
+    path('password-reset-request/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('users/password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 
 
 ]

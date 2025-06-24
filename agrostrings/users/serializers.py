@@ -1,6 +1,10 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, PasswordResetCode
 from django.contrib.auth import authenticate
+import random
+from utils.sms import send_sms_africastalking
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -153,3 +157,76 @@ class UserUpdateProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+
+
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+
+    def validate(self, data):
+        phone = data['phone_number']
+        try:
+            user = User.objects.get(phone_number=phone)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with that phone number does not exist.")
+
+        code = f"{random.randint(100000, 999999)}"
+        PasswordResetCode.objects.create(user=user, code=code)
+
+        # Send SMS
+        message = f"Your password reset code is: {code}"
+        send_sms_africastalking(phone, message)
+
+        return {"message": "Reset code sent to your phone number."}
+
+
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    code = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        phone = data['phone_number']
+        code = data['code']
+        new_password = data['new_password']
+
+        try:
+            user = User.objects.get(phone_number=phone)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid phone number.")
+
+        try:
+            reset_entry = PasswordResetCode.objects.filter(user=user, code=code).latest('created_at')
+        except PasswordResetCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid or expired reset code.")
+
+        if not reset_entry.is_valid():
+            raise serializers.ValidationError("Reset code has expired.")
+
+        user.set_password(new_password)
+        user.save()
+        reset_entry.delete()
+        return {"message": "Password reset successful."}
+
+
+
+
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs["refresh"]
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            token = RefreshToken(self.token)
+            token.blacklist()
+        except TokenError:
+            raise serializers.ValidationError("Token is invalid or expired.")
