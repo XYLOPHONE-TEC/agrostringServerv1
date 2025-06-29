@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     #project apps
-    'users'
+    'users',
+    'farmers',
 ]
 
 
@@ -166,6 +167,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+import os
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+#STATIC_URL = '/static/'
+
 
 STATIC_URL = 'static/'
 
