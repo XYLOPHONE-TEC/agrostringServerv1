@@ -16,3 +16,15 @@ class Produce(models.Model):
 
     def __str__(self):
         return f"{self.crop_type} by {self.farmer.username}"
+
+
+
+
+# class CarbonTracker(models.Model):
+#     farmer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     total_planted_trees = models.IntegerField(default=0)
+#     sustainable_farming_score = models.FloatField(default=0.0)
+#     last_updated = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return f"Carbon Data for {self.farmer.username}"
