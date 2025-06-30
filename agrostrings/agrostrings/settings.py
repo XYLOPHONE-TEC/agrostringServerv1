@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     #project apps
     'users',
     'farmers',
+    'buyers',
+    'adminboard',
 ]
 
 
