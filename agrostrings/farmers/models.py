@@ -49,3 +49,11 @@ class CommunityReply(models.Model):
     responder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class AdminReplyToRequest(models.Model):
+    request = models.ForeignKey(FarmInputRequest, on_delete=models.CASCADE, related_name='admin_replies')
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    reply = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
