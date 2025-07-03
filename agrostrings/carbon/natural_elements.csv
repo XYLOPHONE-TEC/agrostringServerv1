@@ -1,0 +1,9 @@
+element,value
+tree_co2_kg_per_m3,10.5
+fertilizer_organic_factor,0.8
+fertilizer_chemical_factor,1.2
+diesel_co2_kg_per_liter,2.68
+solar_energy_factor,0.0
+waste_compost_factor,-0.5
+waste_burn_factor,1.5
+crop_sequestration_factor,5.0

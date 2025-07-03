@@ -38,3 +38,9 @@ class CropData(models.Model):
     intercropping = models.BooleanField(default=False)
     pct_land_used = models.FloatField()
     pesticide_type = models.CharField(max_length=20, choices=[('organic','Organic'),('chemical','Chemical')])
+
+
+
+class Coefficient(models.Model):
+    element = models.CharField(max_length=100, unique=True)
+    value = models.FloatField()
