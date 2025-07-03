@@ -5,7 +5,7 @@ from .models import TreeData, FertilizerData, EnergyData, WasteData, CropData
 
 # Load CSV once and cache it
 def load_coefficients():
-    csv_path = os.path.join(settings.BASE_DIR, 'carbon', 'natural_element.csv')
+    csv_path = os.path.join(settings.BASE_DIR, 'carbon', 'natural_elements.csv')
     data = {}
     try:
         with open(csv_path, newline='') as csvfile:
