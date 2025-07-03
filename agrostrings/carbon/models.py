@@ -4,7 +4,7 @@ from django.conf import settings
 
 class FarmerCarbonData(models.Model):
     farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    measured_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='measured_data', null=True)
+    measured_by = models.CharField(max_length=150, default='manual')
     date_recorded = models.DateField(auto_now_add=True)
 
 # New data sections:
