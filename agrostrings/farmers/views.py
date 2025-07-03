@@ -30,10 +30,44 @@ class FarmerProduceDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Produce.objects.filter(farmer=self.request.user)
 
 
-# class FarmerCarbonView(generics.RetrieveUpdateAPIView):
-#     serializer_class = CarbonTrackerSerializer
-#     permission_classes = [permissions.IsAuthenticated]
 
-#     def get_object(self):
-#         obj, created = CarbonTracker.objects.get_or_create(farmer=self.request.user)
-#         return obj
+
+# views.py
+
+from rest_framework import viewsets, permissions
+from .models import (
+    FarmerCommunityQuestion,
+    CommunityReply,
+    FarmInputRequest,
+    AdminReplyToRequest
+)
+from .serializers import (
+    FarmerCommunityQuestionSerializer,
+    CommunityReplySerializer,
+    FarmInputRequestSerializer,
+    AdminReplyToRequestSerializer
+)
+
+class FarmerCommunityQuestionViewSet(viewsets.ModelViewSet):
+    queryset = FarmerCommunityQuestion.objects.all().order_by('-created_at')
+    serializer_class = FarmerCommunityQuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class CommunityReplyViewSet(viewsets.ModelViewSet):
+    queryset = CommunityReply.objects.all().order_by('created_at')
+    serializer_class = CommunityReplySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class FarmInputRequestViewSet(viewsets.ModelViewSet):
+    queryset = FarmInputRequest.objects.all().order_by('-created_at')
+    serializer_class = FarmInputRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class AdminReplyToRequestViewSet(viewsets.ModelViewSet):
+    queryset = AdminReplyToRequest.objects.all().order_by('created_at')
+    serializer_class = AdminReplyToRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+
