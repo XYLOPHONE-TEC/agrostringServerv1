@@ -42,3 +42,10 @@ class FarmInputRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
 
+
+
+class CommunityReply(models.Model):
+    question = models.ForeignKey(FarmerCommunityQuestion, on_delete=models.CASCADE, related_name='replies')
+    responder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
