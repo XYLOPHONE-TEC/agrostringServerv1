@@ -1,11 +1,29 @@
-# carbon/services.py
+import csv
+import os
+from django.conf import settings
 from .models import TreeData, FertilizerData, EnergyData, WasteData, CropData
 
+# Load CSV once and cache it
+def load_coefficients():
+    csv_path = os.path.join(settings.BASE_DIR, 'carbon', 'natural_element.csv')
+    data = {}
+    try:
+        with open(csv_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                data[row['element']] = float(row['value'])
+    except FileNotFoundError:
+        print("⚠️ Coefficient file not found!")
+    return data
+
+COEFFICIENTS = load_coefficients()
+
 def calculate_score(record):
+    c = COEFFICIENTS
     breakdown = {}
     total = 0
 
-    # Trees (max 30 pts)
+    # Trees
     try:
         t = record.treedata
         pts = min(t.num_trees // 5, 10)
@@ -18,21 +36,21 @@ def calculate_score(record):
     except TreeData.DoesNotExist:
         breakdown['trees'] = 0
 
-    # Fertilizer (max 20)
+    # Fertilizer
     try:
         f = record.fertilizerdata
         if f.type == 'organic':
-            pts = 20
+            pts = int(20 * c.get('fertilizer_organic_factor', 1))
         elif f.type == 'mixed':
             pts = 10
         else:
-            pts = 0
+            pts = int(20 * c.get('fertilizer_chemical_factor', 1))
         breakdown['fertilizer'] = pts
         total += pts
     except FertilizerData.DoesNotExist:
         breakdown['fertilizer'] = 0
 
-    # Energy (max 15)
+    # Energy
     try:
         e = record.energydata
         pts = 10 if e.uses_solar else 0
@@ -43,10 +61,10 @@ def calculate_score(record):
     except EnergyData.DoesNotExist:
         breakdown['energy'] = 0
 
-    # Waste (max 15)
+    # Waste
     try:
         w = record.wastedata
-        pts = 10 if not w.burns_waste else 0
+        pts = 10 if not w.burns_waste else -int(5 * c.get('waste_burn_factor', 1))
         pts += 5 if w.uses_compost else 0
         pts += 2 if w.waste_separation else 0
         breakdown['waste'] = pts
@@ -54,29 +72,24 @@ def calculate_score(record):
     except WasteData.DoesNotExist:
         breakdown['waste'] = 0
 
-    # Crops (max 20)
+    # Crops
     try:
-        c = record.cropdata
+        cdata = record.cropdata
         pts = 0
-        crop_types = len(c.crop_types.split(',')) if c.crop_types else 0
+        crop_types = len(cdata.crop_types.split(',')) if cdata.crop_types else 0
         if crop_types >= 2:
             pts += 5
-        if c.intercropping:
+        if cdata.intercropping:
             pts += 5
-        pts += 5 if c.pct_land_used >= 70 else 0
-        pts += 5 if c.pesticide_type == 'organic' else 0
+        pts += 5 if cdata.pct_land_used >= 70 else 0
+        pts += 5 if cdata.pesticide_type == 'organic' else 0
         breakdown['crops'] = pts
         total += pts
     except CropData.DoesNotExist:
         breakdown['crops'] = 0
 
-    # Determine level
-    if total >= 80:
-        level = 'High'
-    elif total >= 50:
-        level = 'Medium'
-    else:
-        level = 'Low'
+    # Final level
+    level = 'High' if total >= 80 else 'Medium' if total >= 50 else 'Low'
 
     return {
         'total': total,
