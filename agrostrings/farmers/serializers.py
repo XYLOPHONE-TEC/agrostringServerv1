@@ -19,6 +19,12 @@ class CommunityReplySerializer(serializers.ModelSerializer):
     class Meta:
         model = CommunityReply
         fields = '__all__'
+        read_only_fields = ['created_at', 'responder_name', 'responder']
+
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return CommunityReply.objects.create(responder=user, **validated_data)
 
 
 class FarmerCommunityQuestionSerializer(serializers.ModelSerializer):

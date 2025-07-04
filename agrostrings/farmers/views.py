@@ -52,6 +52,8 @@ class CommunityReplyCreateView(generics.CreateAPIView):
     serializer_class = CommunityReplySerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    
+
 
 
 class CommunityRepliesByQuestionView(generics.ListAPIView):
