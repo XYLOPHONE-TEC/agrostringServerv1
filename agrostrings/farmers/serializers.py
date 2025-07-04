@@ -26,7 +26,14 @@ class FarmerCommunityQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FarmerCommunityQuestion
-        fields = '__all__'
+        fields = ['id', 'title', 'description', 'created_at', 'replies']  # exclude farmer here
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        # Just to be extra safe, pop farmer if it sneaked in
+        validated_data.pop('farmer', None)
+        return FarmerCommunityQuestion.objects.create(farmer=user, **validated_data)
+
 
 
 class AdminReplyToRequestSerializer(serializers.ModelSerializer):
