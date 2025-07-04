@@ -56,4 +56,17 @@ class FarmInputRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FarmInputRequest
         fields = '__all__'
+        read_only_fields = ['farmer', 'created_at', 'is_reviewed', 'admin_replies']
+
+
+    def create(self, validated_data):
+        #user = self.context['request'].user
+        return FarmInputRequest.objects.create(**validated_data)
+    
+
+    def update(self, instance, validated_data):
+        instance.is_reviewed = True
+        instance.save()
+        return instance
+    
 
