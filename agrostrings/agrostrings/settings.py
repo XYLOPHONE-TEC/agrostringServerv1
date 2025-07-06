@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
     'utils',
+    'django_filters',
+    #'django_extensions',
 
     #project apps
     'users',
@@ -68,6 +70,8 @@ INSTALLED_APPS = [
     'buyers',
     'adminboard',
     'carbon',
+    'strings_tv',
+
     
 ]
 
