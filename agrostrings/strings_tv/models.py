@@ -14,7 +14,7 @@ class Video(models.Model):
     tags = models.ManyToManyField(VideoCategory, related_name='videos')
     created_at = models.DateTimeField(auto_now_add=True)
     caption = models.TextField(blank=True)
-    category = models.CharField(max_length=100, blank=True)
+    #category = models.CharField(max_length=100, blank=True)
     views = models.PositiveIntegerField(default=0)
     likes = models.ManyToManyField(User, related_name='liked_videos', blank=True)
 
