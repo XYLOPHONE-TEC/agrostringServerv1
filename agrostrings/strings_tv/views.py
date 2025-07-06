@@ -6,6 +6,8 @@ from .serializers import VideoSerializer, CommentSerializer, VideoCategorySerial
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from .recommendation import recommend_videos_for_user
+
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all().order_by('-created_at')
     serializer_class = VideoSerializer
@@ -33,6 +35,16 @@ class CommentViewSet(viewsets.ModelViewSet):
 class VideoCategoryViewSet(viewsets.ModelViewSet):
     queryset = VideoCategory.objects.all()
     serializer_class = VideoCategorySerializer
+
+
+
+@action(detail=False, methods=['get'])
+def recommended(self, request):
+    videos = recommend_videos_for_user(request.user)
+    serializer = self.get_serializer(videos, many=True)
+    return Response(serializer.data)
+
+
 
 class AgroStringsTVScheduleViewSet(viewsets.ModelViewSet):
     queryset = AgroStringsTVSchedule.objects.all()
