@@ -63,27 +63,6 @@ class VideoViewSet(viewsets.ModelViewSet):
 
 
 
-
-# class VideoViewSet(viewsets.ModelViewSet):
-#     queryset = Video.objects.all().order_by('-created_at')
-#     serializer_class = VideoSerializer
-#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-#     def perform_create(self, serializer):
-#         serializer.save(user=self.request.user)
-
-#     @action(detail=True, methods=['post'])
-#     def like(self, request, pk=None):
-#         video = self.get_object()
-#         video.likes.add(request.user)
-#         return Response({'status': 'liked'})
-
-#     @action(detail=True, methods=['post'])
-#     def view(self, request, pk=None):
-#         video = self.get_object()
-#         video.view()
-#         return Response({'status': 'view counted'})
-
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
