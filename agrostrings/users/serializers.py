@@ -6,7 +6,6 @@ from utils.sms import send_sms_africastalking
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     operator_id = serializers.CharField(read_only=True)
     registered_by = serializers.SerializerMethodField()
@@ -89,61 +88,39 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
     district = serializers.CharField(required=False)
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
 
     def validate(self, data):
-        role = data.get("role")
+        phone = data.get("phone_number")
+        district = data.get("district")
+        username = data.get("username")
+        password = data.get("password")
 
-        if role == "farmer":
-            phone = data.get("phone_number")
-            district = data.get("district")
-
-            if not phone or not district:
-                raise serializers.ValidationError(
-                    "Phone number and district are required for farmers."
-                )
-
+        # Try to authenticate as farmer first
+        if phone and district:
             try:
-                user = User.objects.get(
-                    phone_number=phone, role="farmer", district=district
-                )
+                user = User.objects.get(phone_number=phone, district=district)
+                if user.role == "farmer":
+                    return user
             except User.DoesNotExist:
-                raise serializers.ValidationError(
-                    "Farmer with those credentials not found."
-                )
+                pass  # Try other roles below
 
-        elif role in ["buyer", "admin", "field_operator"]:
-            username = data.get("username")
-            password = data.get("password")
-            phone = data.get("phone_number")
-
-            if not username or not password or not phone:
-                raise serializers.ValidationError(
-                    "Username, phone number, and password are required for buyers, admins, and field operators."
-                )
-
+        # If not a farmer, try to authenticate as buyer, admin, or field_operator
+        if username and password and phone:
             user = authenticate(username=username, password=password)
-            if not user or user.role != role or user.phone_number != phone:
-                raise serializers.ValidationError(f"Invalid {role} credentials.")
+            if user and user.phone_number == phone:
+                return user
+            else:
+                raise serializers.ValidationError("Invalid credentials.")
 
-        else:
-            raise serializers.ValidationError("Invalid role or missing role field.")
-
-        return user
-    
-
-
+        raise serializers.ValidationError(
+            "Provide phone number and district for farmers, or username, phone number, and password for other roles."
+        )
 
 
 class UserUpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [
-            "username",
-            "phone_number",
-            "district",
-            "email"
-        ]
+        fields = ["username", "phone_number", "district", "email"]
         extra_kwargs = {
             "username": {"required": False},
             "phone_number": {"required": False},
@@ -158,19 +135,17 @@ class UserUpdateProfileSerializer(serializers.ModelSerializer):
         return instance
 
 
-
-
-
-
 class PasswordResetRequestSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
 
     def validate(self, data):
-        phone = data['phone_number']
+        phone = data["phone_number"]
         try:
             user = User.objects.get(phone_number=phone)
         except User.DoesNotExist:
-            raise serializers.ValidationError("User with that phone number does not exist.")
+            raise serializers.ValidationError(
+                "User with that phone number does not exist."
+            )
 
         code = f"{random.randint(100000, 999999)}"
         PasswordResetCode.objects.create(user=user, code=code)
@@ -182,17 +157,15 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return {"message": "Reset code sent to your phone number."}
 
 
-
-
 class PasswordResetConfirmSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     code = serializers.CharField()
     new_password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        phone = data['phone_number']
-        code = data['code']
-        new_password = data['new_password']
+        phone = data["phone_number"]
+        code = data["code"]
+        new_password = data["new_password"]
 
         try:
             user = User.objects.get(phone_number=phone)
@@ -200,7 +173,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid phone number.")
 
         try:
-            reset_entry = PasswordResetCode.objects.filter(user=user, code=code).latest('created_at')
+            reset_entry = PasswordResetCode.objects.filter(user=user, code=code).latest(
+                "created_at"
+            )
         except PasswordResetCode.DoesNotExist:
             raise serializers.ValidationError("Invalid or expired reset code.")
 
@@ -211,10 +186,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         user.save()
         reset_entry.delete()
         return {"message": "Password reset successful."}
-
-
-
-
 
 
 class LogoutSerializer(serializers.Serializer):

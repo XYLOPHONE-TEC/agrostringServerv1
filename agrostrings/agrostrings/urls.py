@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/buyers/', include('buyers.urls')),
     path('api/adminboard/', include('adminboard.urls')),
     path('api/carbon/', include('carbon.urls')),
+    path('api/strings_tv/', include('strings_tv.urls')),
 
 
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
