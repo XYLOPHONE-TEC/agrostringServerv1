@@ -8,9 +8,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .recommendation import recommend_videos_for_user
 from rest_framework.permissions import IsAuthenticated
-
-
-
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 import re
 from .models import VideoCategory
 
@@ -21,9 +20,14 @@ STOP_WORDS = {
 }
 
 class VideoViewSet(viewsets.ModelViewSet):
-    queryset = Video.objects.all().order_by('-created_at')
+    queryset = Video.objects.select_related().prefetch_related('tags', 'likes', 'comments').order_by('-created_at')
+
+    #queryset = Video.objects.all().order_by('-created_at')
     serializer_class = VideoSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['region', 'category', 'sub_category', 'season', 'content_type']
+    search_fields = ['title', 'description']
 
     def perform_create(self, serializer):
         video = serializer.save(user=self.request.user)
@@ -60,12 +64,23 @@ class VideoViewSet(viewsets.ModelViewSet):
         video = self.get_object()
         video.view()
         return Response({'status': 'view counted'})
+    
+    @action(detail=False, methods=['get'])
+    def trending(self, request):
+        videos = Video.objects.all()
+        videos = sorted(videos, key=lambda v: v.engagement_score(), reverse=True)[:10]
+        serializer = self.get_serializer(videos, many=True)
+        return Response(serializer.data)
+
 
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 class VideoCategoryViewSet(viewsets.ModelViewSet):
     queryset = VideoCategory.objects.all()

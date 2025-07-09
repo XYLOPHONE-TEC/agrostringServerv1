@@ -9,6 +9,7 @@ video_list = VideoViewSet.as_view({'get': 'list', 'post': 'create'})
 video_detail = VideoViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'})
 video_like = VideoViewSet.as_view({'post': 'like'})
 video_view = VideoViewSet.as_view({'post': 'view'})
+video_trending = VideoViewSet.as_view({'get': 'trending'})
 
 # COMMENT paths
 comment_list = CommentViewSet.as_view({'get': 'list', 'post': 'create'})
@@ -30,6 +31,7 @@ urlpatterns = [
     path('videos/<int:pk>/like/', video_like, name='video-like'),
     path('videos/<int:pk>/view/', video_view, name='video-view'),
     path('videos/recommended/', RecommendedVideosView.as_view(), name='video-recommended'),
+    path('videos/trending/', video_trending, name='video-trending'),
 
     # COMMENT
     path('comments/', comment_list, name='comment-list'),
