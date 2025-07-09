@@ -2,7 +2,12 @@ from django.shortcuts import render
 
 from rest_framework import viewsets, permissions
 from .models import Video, Comment, VideoCategory, AgroStringsTVSchedule
-from .serializers import VideoSerializer, CommentSerializer, VideoCategorySerializer, AgroStringsTVScheduleSerializer
+from .serializers import (
+    VideoSerializer,
+    CommentSerializer,
+    VideoCategorySerializer,
+    AgroStringsTVScheduleSerializer,
+)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,19 +20,43 @@ from .models import VideoCategory
 
 # Common English stopwords to ignore (you can expand this list)
 STOP_WORDS = {
-    "i", "my", "this", "the", "a", "an", "and", "or", "is", "in", "on",
-    "of", "to", "with", "was", "for", "at", "by", "from", "used", "it"
+    "i",
+    "my",
+    "this",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "is",
+    "in",
+    "on",
+    "of",
+    "to",
+    "with",
+    "was",
+    "for",
+    "at",
+    "by",
+    "from",
+    "used",
+    "it",
 }
 
-class VideoViewSet(viewsets.ModelViewSet):
-    queryset = Video.objects.select_related().prefetch_related('tags', 'likes', 'comments').order_by('-created_at')
 
-    #queryset = Video.objects.all().order_by('-created_at')
+class VideoViewSet(viewsets.ModelViewSet):
+    queryset = (
+        Video.objects.select_related()
+        .prefetch_related("tags", "likes", "comments")
+        .order_by("-created_at")
+    )
+
+    # queryset = Video.objects.all().order_by('-created_at')
     serializer_class = VideoSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['region', 'category', 'sub_category', 'season', 'content_type']
-    search_fields = ['title', 'description']
+    filterset_fields = ["region", "category", "sub_category", "season", "content_type"]
+    search_fields = ["title", "description"]
 
     def perform_create(self, serializer):
         video = serializer.save(user=self.request.user)
@@ -36,7 +65,7 @@ class VideoViewSet(viewsets.ModelViewSet):
         title_text = video.title.lower()
 
         # Extract individual words from the title
-        keywords = re.findall(r'\b\w+\b', title_text)
+        keywords = re.findall(r"\b\w+\b", title_text)
 
         # Remove common/meaningless words
         filtered_keywords = [word for word in keywords if word not in STOP_WORDS]
@@ -44,35 +73,30 @@ class VideoViewSet(viewsets.ModelViewSet):
         # Create or reuse tags and link them to the video
         for word in filtered_keywords:
             tag, created = VideoCategory.objects.get_or_create(
-                name__iexact=word,
-                defaults={"name": word}
+                name__iexact=word, defaults={"name": word}
             )
             video.tags.add(tag)
 
         video.save()
 
-
-
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def like(self, request, pk=None):
         video = self.get_object()
         video.likes.add(request.user)
-        return Response({'status': 'liked'})
+        return Response({"status": "liked"})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def view(self, request, pk=None):
         video = self.get_object()
         video.view()
-        return Response({'status': 'view counted'})
-    
-    @action(detail=False, methods=['get'])
+        return Response({"status": "view counted"})
+
+    @action(detail=False, methods=["get"])
     def trending(self, request):
         videos = Video.objects.all()
         videos = sorted(videos, key=lambda v: v.engagement_score(), reverse=True)[:10]
         serializer = self.get_serializer(videos, many=True)
         return Response(serializer.data)
-
-
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -82,10 +106,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 class VideoCategoryViewSet(viewsets.ModelViewSet):
     queryset = VideoCategory.objects.all()
     serializer_class = VideoCategorySerializer
 
+    def get_permissions(self):
+        # Only allow admin/superadmin to create, update, or delete
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            from users.permissions import IsAdmin, IsSuperAdmin
+
+            return [(IsAdmin | IsSuperAdmin)()]
+        # Allow any user to list or retrieve
+        return [permissions.AllowAny()]
 
 
 class RecommendedVideosView(APIView):
@@ -95,7 +128,6 @@ class RecommendedVideosView(APIView):
         videos = recommend_videos_for_user(request.user)
         serializer = VideoSerializer(videos, many=True, context={"request": request})
         return Response(serializer.data)
-
 
 
 class AgroStringsTVScheduleViewSet(viewsets.ModelViewSet):
