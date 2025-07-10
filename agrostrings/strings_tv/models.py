@@ -66,8 +66,17 @@ class Comment(models.Model):
 
 class AgroStringsTVSchedule(models.Model):
     title = models.CharField(max_length=255)
-    video = models.FileField(upload_to='tv_videos/')
+    video = models.FileField(upload_to='tv_videos/', blank=True, null=True)
+    video_url = models.URLField(blank=True, null=True, help_text="YouTube/Vimeo link (optional)")
     category = models.ForeignKey(VideoCategory, on_delete=models.SET_NULL, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_downloadable = models.BooleanField(default=False)
+    language = models.CharField(
+        max_length=30,
+        choices=[('en', 'English'), ('lg', 'Luganda'), ('sw', 'Swahili')],
+        default='en'
+    )
+
+    def __str__(self):
+        return self.title
