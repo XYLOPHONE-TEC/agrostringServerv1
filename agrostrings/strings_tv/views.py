@@ -133,3 +133,9 @@ class RecommendedVideosView(APIView):
 class AgroStringsTVScheduleViewSet(viewsets.ModelViewSet):
     queryset = AgroStringsTVSchedule.objects.all()
     serializer_class = AgroStringsTVScheduleSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            from users.permissions import IsAdmin, IsSuperAdmin
+            return [(IsAdmin | IsSuperAdmin)()]
+        return [permissions.AllowAny()]

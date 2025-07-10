@@ -54,4 +54,9 @@ class AgroStringsTVScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AgroStringsTVSchedule
-        fields = "__all__"
+        fields = '__all__'
+
+    def validate(self, data):
+        if not data.get('video') and not data.get('video_url'):
+            raise serializers.ValidationError("Either video file or video URL is required.")
+        return data
