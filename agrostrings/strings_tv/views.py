@@ -139,3 +139,22 @@ class AgroStringsTVScheduleViewSet(viewsets.ModelViewSet):
             from users.permissions import IsAdmin, IsSuperAdmin
             return [(IsAdmin | IsSuperAdmin)()]
         return [permissions.AllowAny()]
+
+    
+    @action(detail=True, methods=['post'])
+    def rate(self, request, pk=None):
+        tv_video = self.get_object()
+        rating_value = request.data.get('rating')
+        if not rating_value or not (1 <= int(rating_value) <= 5):
+            return Response({'detail': 'Rating must be 1-5.'}, status=status.HTTP_400_BAD_REQUEST)
+        rating, created = TVRating.objects.update_or_create(
+            user=request.user, tv_video=tv_video, defaults={'rating': rating_value}
+        )
+        return Response({'detail': 'Rating submitted.'})
+    
+    @action(detail=True, methods=['post'])
+    def watch(self, request, pk=None):
+        tv_video = self.get_object()
+        TVView.objects.create(user=request.user, tv_video=tv_video)
+        return Response({'detail': 'View recorded.'})
+

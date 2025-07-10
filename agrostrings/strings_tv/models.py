@@ -80,3 +80,19 @@ class AgroStringsTVSchedule(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+
+class TVRating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tv_video = models.ForeignKey(AgroStringsTVSchedule, on_delete=models.CASCADE, related_name='ratings')
+    rating = models.PositiveSmallIntegerField()  # 1-5 stars
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'tv_video')
+
+class TVView(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tv_video = models.ForeignKey(AgroStringsTVSchedule, on_delete=models.CASCADE, related_name='views')
+    watched_at = models.DateTimeField(auto_now_add=True)
