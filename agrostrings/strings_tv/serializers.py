@@ -1,6 +1,14 @@
 # serializers.py
 from rest_framework import serializers
-from .models import Video, Comment, VideoCategory, AgroStringsTVSchedule, TVRating, TVView
+from .models import (
+    Video,
+    Comment,
+    VideoCategory,
+    AgroStringsTVSchedule,
+    TVRating,
+    TVView,
+)
+from django.utils.translation import gettext_lazy as _
 
 
 class VideoCategorySerializer(serializers.ModelSerializer):
@@ -50,20 +58,23 @@ class VideoSerializer(serializers.ModelSerializer):
 
 
 class AgroStringsTVScheduleSerializer(serializers.ModelSerializer):
-    category = VideoCategorySerializer(read_only=True)
+    # Allow category assignment on create/update
+    #category = serializers.PrimaryKeyRelatedField(queryset=VideoCategory.objects.all())
     average_rating = serializers.SerializerMethodField()
     view_count = serializers.SerializerMethodField()
 
     class Meta:
         model = AgroStringsTVSchedule
-        fields = '__all__'
-        extra_fields = ['average_rating', 'view_count']
+        fields = "__all__"
+        extra_fields = ["average_rating", "view_count"]
 
     def validate(self, data):
-        if not data.get('video') and not data.get('video_url'):
-            raise serializers.ValidationError("Either video file or video URL is required.")
+        if not data.get("video") and not data.get("video_url"):
+            raise serializers.ValidationError(
+                "Either video file or video URL is required."
+            )
         return data
-    
+
     def get_average_rating(self, obj):
         ratings = obj.ratings.all()
         if ratings.exists():
@@ -74,16 +85,15 @@ class AgroStringsTVScheduleSerializer(serializers.ModelSerializer):
         return obj.views.count()
 
 
-
-
 class TVRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = TVRating
-        fields = ['id', 'user', 'tv_video', 'rating', 'created_at']
-        read_only_fields = ['user', 'created_at']
+        fields = ["id", "user", "tv_video", "rating", "created_at"]
+        read_only_fields = ["user", "created_at"]
+
 
 class TVViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = TVView
-        fields = ['id', 'user', 'tv_video', 'watched_at']
-        read_only_fields = ['user', 'watched_at']
+        fields = ["id", "user", "tv_video", "watched_at"]
+        read_only_fields = ["user", "watched_at"]

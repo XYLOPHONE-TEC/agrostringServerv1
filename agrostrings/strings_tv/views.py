@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 from rest_framework import viewsets, permissions
-from .models import Video, Comment, VideoCategory, AgroStringsTVSchedule
+from .models import Video, Comment, VideoCategory, AgroStringsTVSchedule, TVRating, TVView
 from .serializers import (
     VideoSerializer,
     CommentSerializer,
@@ -12,11 +12,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .recommendation import recommend_videos_for_user
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import re
 from .models import VideoCategory
+from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 # Common English stopwords to ignore (you can expand this list)
 STOP_WORDS = {
@@ -152,9 +154,17 @@ class AgroStringsTVScheduleViewSet(viewsets.ModelViewSet):
         )
         return Response({'detail': 'Rating submitted.'})
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def watch(self, request, pk=None):
         tv_video = self.get_object()
-        TVView.objects.create(user=request.user, tv_video=tv_video)
+
+        if request.user.is_authenticated:
+        # Logged-in user
+            TVView.objects.create(user=request.user, tv_video=tv_video)
+        else:
+        # Anonymous users — optionally just log to console or ignore
+            print(f"Anonymous user watched TV ID {tv_video.id} at {now()}")
+        # Optional: You could also log to a file or use a custom AnonymousView model
+
         return Response({'detail': 'View recorded.'})
 

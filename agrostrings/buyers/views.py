@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from .models import CartItem, Order, OrderItem
 from farmers.models import Produce
 from django.db import transaction
-
+from django.utils.translation import gettext_lazy as _
 
 class CartListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]

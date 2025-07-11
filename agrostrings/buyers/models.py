@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from farmers.models import Produce
-
+from django.utils.translation import gettext_lazy as _
 
 class CartItem(models.Model):
     user = models.ForeignKey(

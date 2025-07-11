@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 import random
 from utils.sms import send_sms_africastalking
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from django.utils.translation import gettext_lazy as _
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -54,8 +54,8 @@ urlpatterns = [
     path("categories/", category_list, name="category-list"),
     path("categories/<int:pk>/", category_detail, name="category-detail"),
     # AGROSTRINGS TV
-    path("tv/", tv_list, name="tv-list"),
-    path("tv/<int:pk>/", tv_detail, name="tv-detail"),
-    path("tv/<int:pk>/rate/", tv_rate, name="tv-rate"),
-    path("tv/<int:pk>/watch/", tv_watch, name="tv-watch"),
+    path("television/", tv_list, name="tv-list"),
+    path("television/<int:pk>/", tv_detail, name="tv-detail"),
+    path("television/<int:pk>/rate/", tv_rate, name="tv-rate"),
+    path("television/<int:pk>/watch/", tv_watch, name="tv-watch"),
 ]

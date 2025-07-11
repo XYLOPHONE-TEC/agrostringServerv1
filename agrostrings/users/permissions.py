@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-
+from django.utils.translation import gettext_lazy as _
 
 class IsFarmer(BasePermission):
     def has_permission(self, request, view):

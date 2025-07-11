@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'utils',
     'django_filters',
+    'modeltranslation',
     #'django_extensions',
 
     #project apps
@@ -92,10 +93,24 @@ SIMPLE_JWT = {
 }
 
 
+LANGUAGES = [
+    ('en', 'English'),
+    ('lg', 'Luganda'),
+    ('sw', 'Swahili'),
+]
+LANGUAGE_CODE = 'en'
+USE_I18N = True
+USE_L10N = True
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

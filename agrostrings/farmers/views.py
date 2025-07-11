@@ -9,6 +9,7 @@ from users.permissions import IsFarmer, IsAdmin, IsSuperAdmin
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from django.utils.translation import gettext_lazy as _
 
 class FarmerProduceListCreateView(generics.ListCreateAPIView):
     serializer_class = ProduceSerializer
