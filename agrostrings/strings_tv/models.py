@@ -1,5 +1,8 @@
+import uuid
+import secrets
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 from django.utils.translation import gettext_lazy as _
@@ -69,29 +72,62 @@ class Comment(models.Model):
 
 from django.utils.translation import gettext_lazy as _
 class AgroStringsTVSchedule(models.Model):
+    STREAM_TYPE_CHOICES = [
+        ("live", "Live"),
+        ("pre_recorded", "Pre-Recorded"),
+    ]
     title = models.CharField(max_length=255)
-    video = models.FileField(upload_to="tv_videos/", blank=True, null=True)
+    stream_type = models.CharField(
+        max_length=20, choices=STREAM_TYPE_CHOICES, default="pre_recorded"
+    )
+    video = models.FileField(
+        upload_to="tv_videos/",
+        blank=True,
+        null=True,
+        help_text="Upload a video for pre-recorded content.",
+    )
     video_url = models.URLField(
-        blank=True, null=True, help_text="YouTube/Vimeo link (optional)"
+        blank=True,
+        null=True,
+        help_text="YouTube/Vimeo link for pre-recorded content.",
     )
     category = models.ForeignKey(VideoCategory, on_delete=models.SET_NULL, null=True)
-    start_time = models.DateTimeField(blank=True, null=True)
-    end_time = models.DateTimeField(blank=True, null=True)
+    start_time = models.DateTimeField(
+        help_text="The time the live stream is scheduled to start.", default=timezone.now
+    )
+    end_time = models.DateTimeField(
+        blank=True, null=True, help_text="The time the live stream is scheduled to end."
+    )
     is_downloadable = models.BooleanField(default=False)
     language = models.CharField(
         max_length=30,
         choices=[
-            ('en', _("English")),
-            ('lg', _("Luganda")),
-            ('sw', _("Swahili")),
+            ("en", _("English")),
+            ("lg", _("Luganda")),
+            ("sw", _("Swahili")),
         ],
-        default='en',
+        default="en",
         verbose_name=_("Language"),
     )
-    is_live = models.BooleanField(default=False)
+    is_live = models.BooleanField(
+        default=False, help_text="Indicates if the stream is currently live."
+    )
+    stream_key = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="The unique key for the broadcaster to use.",
+    )
+
+    def save(self, *args, **kwargs):
+        if self.stream_type == "live" and not self.stream_key:
+            # Generate a unique and secure stream key
+            self.stream_key = f"live_{secrets.token_urlsafe(16)}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.get_stream_type_display()})"
 
 
 class TVRating(models.Model):

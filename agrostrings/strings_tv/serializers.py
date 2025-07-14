@@ -58,22 +58,31 @@ class VideoSerializer(serializers.ModelSerializer):
 
 
 class AgroStringsTVScheduleSerializer(serializers.ModelSerializer):
-    # Allow category assignment on create/update
-    #category = serializers.PrimaryKeyRelatedField(queryset=VideoCategory.objects.all())
     average_rating = serializers.SerializerMethodField()
     view_count = serializers.SerializerMethodField()
+    live_stream_url = serializers.SerializerMethodField()
 
     class Meta:
         model = AgroStringsTVSchedule
         fields = "__all__"
-        extra_fields = ["average_rating", "view_count"]
+        read_only_fields = ("stream_key",)
+        extra_fields = ["average_rating", "view_count", "live_stream_url"]
 
     def validate(self, data):
-        if not data.get("video") and not data.get("video_url"):
-            raise serializers.ValidationError(
-                "Either video file or video URL is required."
-            )
+        stream_type = data.get("stream_type")
+        if stream_type == "pre_recorded":
+            if not data.get("video") and not data.get("video_url"):
+                raise serializers.ValidationError(
+                    "For pre-recorded streams, either a video file or a video URL is required."
+                )
         return data
+
+    def get_live_stream_url(self, obj):
+        if obj.stream_type == "live" and obj.is_live:
+            # This URL should point to your Nginx-RTMP HLS stream
+            # The exact URL will depend on your Nginx configuration
+            return f"http://your-media-server.com/hls/{obj.stream_key}.m3u8"
+        return None
 
     def get_average_rating(self, obj):
         ratings = obj.ratings.all()

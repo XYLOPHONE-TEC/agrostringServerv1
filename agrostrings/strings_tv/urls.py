@@ -6,6 +6,7 @@ from .views import (
     AgroStringsTVScheduleViewSet,
     RecommendedVideosView,
 )
+from .webhooks import StreamOnPublishView, StreamOnPublishDoneView
 
 # VIDEO paths
 video_list = VideoViewSet.as_view({"get": "list", "post": "create"})
@@ -58,4 +59,15 @@ urlpatterns = [
     path("television/<int:pk>/", tv_detail, name="tv-detail"),
     path("television/<int:pk>/rate/", tv_rate, name="tv-rate"),
     path("television/<int:pk>/watch/", tv_watch, name="tv-watch"),
+    # WEBHOOKS
+    path(
+        "webhooks/stream/on_publish/",
+        StreamOnPublishView.as_view(),
+        name="webhook-stream-on-publish",
+    ),
+    path(
+        "webhooks/stream/on_publish_done/",
+        StreamOnPublishDoneView.as_view(),
+        name="webhook-stream-on-publish-done",
+    ),
 ]
