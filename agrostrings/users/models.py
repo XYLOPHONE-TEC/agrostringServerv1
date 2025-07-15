@@ -19,6 +19,8 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, unique=True)
     district = models.CharField(max_length=100, blank=True)
     email = models.EmailField(blank=True, null=True)  # ✅ Make email optional
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     operator_id = models.CharField(
         max_length=30, unique=False, null=True, blank=True
     )  # For field operators
