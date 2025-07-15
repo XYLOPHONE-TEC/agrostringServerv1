@@ -5,6 +5,8 @@ import random
 from utils.sms import send_sms_africastalking
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.utils.translation import gettext_lazy as _
+import requests
+from django.conf import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,6 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
+            "latitude",
+            "longitude",
             "operator_id",
             "registered_by",
         ]
@@ -45,43 +49,114 @@ class RegisterSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
+            "latitude",
+            "longitude",
             "operator_id",
             "registered_by",
         ]
         extra_kwargs = {"password": {"write_only": True}}
+
+
 
     def create(self, validated_data):
         role = validated_data.get("role")
         request = self.context.get("request")
         current_user = request.user if request else None
 
-        # Super admin can create admins and field operators
-        if role == "admin" or role == "field_operator":
+    # Role-based access control
+        if role in ["admin", "field_operator"]:
             if not current_user or not getattr(current_user, "is_super_admin", False):
-                raise serializers.ValidationError(
-                    "Only the super admin can register admins or field operators."
-                )
-            if role == "field_operator":
-                # operator_id must be provided
-                operator_id = validated_data.get("operator_id")
-                if not operator_id:
-                    raise serializers.ValidationError(
-                        "operator_id is required for field operators."
-                    )
-        # Field operator can create farmers
+                raise serializers.ValidationError("Only the super admin can register admins or field operators.")
+            if role == "field_operator" and not validated_data.get("operator_id"):
+                raise serializers.ValidationError("operator_id is required for field operators.")
         elif role == "farmer":
             if not current_user or current_user.role != "field_operator":
-                raise serializers.ValidationError(
-                    "Only field operators can register farmers."
-                )
+                raise serializers.ValidationError("Only field operators can register farmers.")
             validated_data["registered_by"] = current_user
             validated_data["operator_id"] = current_user.operator_id
-        # Prevent anyone else from registering
         else:
             raise serializers.ValidationError("Invalid role for registration.")
 
-        user = User.objects.create_user(**validated_data)
-        return user
+        # Only geocode if not provided
+        latitude = validated_data.get('latitude')
+        longitude = validated_data.get('longitude')
+        district = validated_data.get("district")
+
+        if (not latitude or not longitude) and district and settings.OPENWEATHERMAP_API_KEY:
+            base_url = "http://api.openweathermap.org/geo/1.0/direct"
+            params = {
+                "q": district,
+                "limit": 1,
+                "appid": settings.OPENWEATHERMAP_API_KEY,
+            }
+            try:
+                response = requests.get(base_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+                if data:
+                    location = data[0]
+                    validated_data['latitude'] = location.get('lat')
+                    validated_data['longitude'] = location.get('lon')
+            except requests.exceptions.RequestException:
+                pass  # Optional: log the exception
+
+        return User.objects.create_user(**validated_data)
+
+
+    # def create(self, validated_data):
+    #     role = validated_data.get("role")
+    #     request = self.context.get("request")
+    #     current_user = request.user if request else None
+    #     latitude = validated_data.pop('latitude', None)
+    #     longitude = validated_data.pop('longitude', None)
+
+    #     # Super admin can create admins and field operators
+    #     if role == "admin" or role == "field_operator":
+    #         if not current_user or not getattr(current_user, "is_super_admin", False):
+    #             raise serializers.ValidationError(
+    #                 "Only the super admin can register admins or field operators."
+    #             )
+    #         if role == "field_operator":
+    #             # operator_id must be provided
+    #             operator_id = validated_data.get("operator_id")
+    #             if not operator_id:
+    #                 raise serializers.ValidationError(
+    #                     "operator_id is required for field operators."
+    #                 )
+    #     # Field operator can create farmers
+    #     elif role == "farmer":
+    #         if not current_user or current_user.role != "field_operator":
+    #             raise serializers.ValidationError(
+    #                 "Only field operators can register farmers."
+    #             )
+    #         validated_data["registered_by"] = current_user
+    #         validated_data["operator_id"] = current_user.operator_id
+    #     # Prevent anyone else from registering
+    #     else:
+    #         raise serializers.ValidationError("Invalid role for registration.")
+
+    #     district = validated_data.get("district")
+    #     if district and settings.OPENWEATHERMAP_API_KEY:
+    #         base_url = "http://api.openweathermap.org/geo/1.0/direct"
+    #         params = {
+    #             "q": district,
+    #             "limit": 1,
+    #             "appid": settings.OPENWEATHERMAP_API_KEY,
+    #         }
+    #         try:
+    #             response = requests.get(base_url, params=params)
+    #             response.raise_for_status()
+    #             data = response.json()
+    #             if data:
+    #                 location = data[0]
+    #                 validated_data['latitude'] = location.get('lat')
+    #                 validated_data['longitude'] = location.get('lon')
+    #         except requests.exceptions.RequestException:
+    #             # Handle exceptions for geocoding service errors
+    #             pass
+
+    #     user = User.objects.create_user(**validated_data)
+    #     return user
 
 
 class LoginSerializer(serializers.Serializer):
