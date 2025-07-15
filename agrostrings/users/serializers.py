@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
+            "country",
             "latitude",
             "longitude",
             "operator_id",
@@ -49,6 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
+            "country",
             "latitude",
             "longitude",
             "operator_id",
@@ -56,14 +58,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"password": {"write_only": True}}
 
-
-
     def create(self, validated_data):
         role = validated_data.get("role")
         request = self.context.get("request")
         current_user = request.user if request else None
 
-    # Role-based access control
+        # Role-based access control
         if role in ["admin", "field_operator"]:
             if not current_user or not getattr(current_user, "is_super_admin", False):
                 raise serializers.ValidationError("Only the super admin can register admins or field operators.")
@@ -77,15 +77,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("Invalid role for registration.")
 
-        # Only geocode if not provided
+        # Geocode location
         latitude = validated_data.get('latitude')
         longitude = validated_data.get('longitude')
         district = validated_data.get("district")
+        country = validated_data.get("country")
 
-        if (not latitude or not longitude) and district and settings.OPENWEATHERMAP_API_KEY:
+        if (not latitude or not longitude) and district and country and settings.OPENWEATHERMAP_API_KEY:
+            location_query = f"{district},{country}"
             base_url = "http://api.openweathermap.org/geo/1.0/direct"
             params = {
-                "q": district,
+                "q": location_query,
                 "limit": 1,
                 "appid": settings.OPENWEATHERMAP_API_KEY,
             }
@@ -101,62 +103,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 pass  # Optional: log the exception
 
         return User.objects.create_user(**validated_data)
-
-
-    # def create(self, validated_data):
-    #     role = validated_data.get("role")
-    #     request = self.context.get("request")
-    #     current_user = request.user if request else None
-    #     latitude = validated_data.pop('latitude', None)
-    #     longitude = validated_data.pop('longitude', None)
-
-    #     # Super admin can create admins and field operators
-    #     if role == "admin" or role == "field_operator":
-    #         if not current_user or not getattr(current_user, "is_super_admin", False):
-    #             raise serializers.ValidationError(
-    #                 "Only the super admin can register admins or field operators."
-    #             )
-    #         if role == "field_operator":
-    #             # operator_id must be provided
-    #             operator_id = validated_data.get("operator_id")
-    #             if not operator_id:
-    #                 raise serializers.ValidationError(
-    #                     "operator_id is required for field operators."
-    #                 )
-    #     # Field operator can create farmers
-    #     elif role == "farmer":
-    #         if not current_user or current_user.role != "field_operator":
-    #             raise serializers.ValidationError(
-    #                 "Only field operators can register farmers."
-    #             )
-    #         validated_data["registered_by"] = current_user
-    #         validated_data["operator_id"] = current_user.operator_id
-    #     # Prevent anyone else from registering
-    #     else:
-    #         raise serializers.ValidationError("Invalid role for registration.")
-
-    #     district = validated_data.get("district")
-    #     if district and settings.OPENWEATHERMAP_API_KEY:
-    #         base_url = "http://api.openweathermap.org/geo/1.0/direct"
-    #         params = {
-    #             "q": district,
-    #             "limit": 1,
-    #             "appid": settings.OPENWEATHERMAP_API_KEY,
-    #         }
-    #         try:
-    #             response = requests.get(base_url, params=params)
-    #             response.raise_for_status()
-    #             data = response.json()
-    #             if data:
-    #                 location = data[0]
-    #                 validated_data['latitude'] = location.get('lat')
-    #                 validated_data['longitude'] = location.get('lon')
-    #         except requests.exceptions.RequestException:
-    #             # Handle exceptions for geocoding service errors
-    #             pass
-
-    #     user = User.objects.create_user(**validated_data)
-    #     return user
 
 
 class LoginSerializer(serializers.Serializer):
