@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
-            "country",
+            "country_code",
             "latitude",
             "longitude",
             "operator_id",
@@ -50,7 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "district",
-            "country",
+            "country_code",
             "latitude",
             "longitude",
             "operator_id",
@@ -81,10 +81,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         latitude = validated_data.get('latitude')
         longitude = validated_data.get('longitude')
         district = validated_data.get("district")
-        country = validated_data.get("country")
+        country_code = validated_data.get("country_code")
 
-        if (not latitude or not longitude) and district and country and settings.OPENWEATHERMAP_API_KEY:
-            location_query = f"{district},{country}"
+        if (not latitude or not longitude) and district and country_code and settings.OPENWEATHERMAP_API_KEY:
+            location_query = f"{district},{country_code},East Africa"
             base_url = "http://api.openweathermap.org/geo/1.0/direct"
             params = {
                 "q": location_query,

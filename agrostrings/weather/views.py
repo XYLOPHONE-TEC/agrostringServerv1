@@ -31,6 +31,8 @@ class WeatherSearchForecastView(APIView):
 
     def get(self, request, *args, **kwargs):
         location_query = request.query_params.get('location')
+        country_code = request.query_params.get('country_code')
+
         if not location_query:
             return Response(
                 {"error": "Location parameter is required."},
@@ -42,6 +44,9 @@ class WeatherSearchForecastView(APIView):
                 {"error": "OpenWeatherMap API key not configured."},
                 status=500,
             )
+
+        if country_code:
+            location_query = f"{location_query},{country_code},East Africa"
 
         base_url = "http://api.openweathermap.org/geo/1.0/direct"
         params = {

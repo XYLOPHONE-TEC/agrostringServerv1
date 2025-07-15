@@ -18,7 +18,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=15, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=15, unique=True)
     district = models.CharField(max_length=100, blank=True)
-    country = models.CharField(max_length=100, blank=True)
+    country_code = models.CharField(max_length=2, blank=True)
     email = models.EmailField(blank=True, null=True)  # ✅ Make email optional
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
